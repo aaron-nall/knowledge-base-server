@@ -85,6 +85,14 @@ export function deleteDocument(id) {
 }
 
 export function searchDocuments(query, limit = 20) {
+  // Escape FTS5 special characters and wrap each term in quotes
+  const sanitized = query
+    .replace(/['"]/g, '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(term => `"${term}"`)
+    .join(' ');
+
   const stmt = getDb().prepare(`
     SELECT d.id, d.title,
       snippet(documents_fts, 1, '<mark>', '</mark>', '...', 30) as snippet,
@@ -95,7 +103,7 @@ export function searchDocuments(query, limit = 20) {
     ORDER BY rank
     LIMIT ?
   `);
-  return stmt.all(query, limit);
+  return stmt.all(sanitized, limit);
 }
 
 export function listDocuments({ type, tag, limit = 50, offset = 0 } = {}) {

@@ -72,11 +72,16 @@ router.post('/api/documents', upload.array('files'), async (req, res) => {
       try {
         writeFileSync(tempPath, file.buffer);
         const doc = await ingestFile(tempPath);
-        if (doc && tags) {
-          updateDocument(doc.id, { title: doc.title, tags });
-          doc.tags = tags;
+        if (doc) {
+          // Fix title and source to use original filename
+          const origName = file.originalname;
+          const title = origName.replace(/\.[^.]+$/, '');
+          updateDocument(doc.id, { title, tags: tags || doc.tags });
+          doc.title = title;
+          doc.source = origName;
+          if (tags) doc.tags = tags;
+          documents.push(doc);
         }
-        if (doc) documents.push(doc);
       } finally {
         try { unlinkSync(tempPath); } catch {}
       }
