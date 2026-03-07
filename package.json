@@ -1,0 +1,21 @@
+{
+  "name": "knowledge-base-server",
+  "version": "1.0.0",
+  "description": "Portable knowledge base with web dashboard and MCP server for AI tools",
+  "type": "module",
+  "bin": {
+    "kb": "./bin/kb.js"
+  },
+  "main": "./src/index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.0.0",
+    "express": "^4.21.0",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "^1.1.1"
+  }
+}
