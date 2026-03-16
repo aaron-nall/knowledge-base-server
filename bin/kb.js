@@ -44,6 +44,15 @@ const commands = {
       if (dryRun) console.log('(dry run — no changes written)');
     });
   },
+  'safety-check': () => {
+    const action = args.join(' ');
+    if (!action) { console.error('Usage: kb safety-check <action description>'); process.exit(1); }
+    return import('../src/safety/review.js').then(async m => {
+      const result = await m.reviewDestructiveAction(action);
+      console.log(JSON.stringify(result, null, 2));
+      if (!result.safe) process.exit(1);
+    });
+  },
   vault:    () => {
     const sub = args[0];
     if (sub === 'reindex') return import('../src/cli/vault-cli.js').then(m => m.vaultReindex());

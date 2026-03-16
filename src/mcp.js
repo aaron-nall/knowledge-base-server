@@ -12,6 +12,7 @@ import { captureSession, captureFix } from './capture/terminal.js';
 import { hybridSearch } from './embeddings/search.js';
 import { getRecentNotes, generateSynthesisPrompt } from './synthesis/weekly-review.js';
 import { processNewClippings } from './classify/processor.js';
+import { reviewDestructiveAction } from './safety/review.js';
 
 export async function start() {
   const server = new McpServer({
@@ -390,6 +391,24 @@ export async function start() {
 
         const header = `Found ${briefings.length} relevant docs. Use kb_read(id) for full content on any that look useful.`;
         return { content: [{ type: 'text', text: header + '\n\n' + JSON.stringify(briefings, null, 2) }] };
+      } catch (err) {
+        return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    'kb_safety_check',
+    'Review a potentially destructive action before executing it. Searches KB for past incidents, evaluates risk, and returns a safety verdict. Use this before ANY destroy, delete, drop, or force-push operation.',
+    {
+      action: z.string().describe('The destructive action about to be taken (e.g. "destroy vast.ai instance 12345")'),
+      context: z.string().optional().describe('Additional context about why this is being done'),
+    },
+    async ({ action, context }) => {
+      try {
+        const result = await reviewDestructiveAction(action, context);
+        const prefix = result.safe ? 'SAFE' : 'BLOCKED';
+        return { content: [{ type: 'text', text: `[${prefix}] Risk: ${result.risk_level}\n\n${JSON.stringify(result, null, 2)}` }] };
       } catch (err) {
         return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
       }
