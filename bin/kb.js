@@ -20,6 +20,17 @@ const commands = {
     const result = m.captureXBookmarks(bookmarksPath, vaultPath);
     console.log(`X bookmarks: ${result.created} created, ${result.skipped} skipped (${result.total} total)`);
   }),
+  classify: () => {
+    const dryRun = args.includes('--dry-run');
+    return import('../src/classify/processor.js').then(async m => {
+      const vaultPath = process.env.OBSIDIAN_VAULT_PATH;
+      if (!vaultPath) { console.error('OBSIDIAN_VAULT_PATH not set'); process.exit(1); }
+      const result = await m.processNewClippings(vaultPath, { dryRun });
+      console.log(`\nClassified: ${result.processed}/${result.total} notes`);
+      if (result.errors) console.log(`Errors: ${result.errors}`);
+      if (dryRun) console.log('(dry run — no changes written)');
+    });
+  },
   vault:    () => {
     const sub = args[0];
     if (sub === 'reindex') return import('../src/cli/vault-cli.js').then(m => m.vaultReindex());
@@ -40,6 +51,7 @@ Commands:
   search <query>     Search documents
   status             Show stats and server status
   vault reindex      Reindex Obsidian vault
+  classify           Auto-classify new clippings/inbox notes (--dry-run to preview)
   capture-x [path]   Capture X/Twitter bookmarks to vault
 `);
   process.exit(command ? 1 : 0);

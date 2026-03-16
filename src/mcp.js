@@ -11,6 +11,7 @@ import { captureWeb } from './capture/web.js';
 import { captureSession, captureFix } from './capture/terminal.js';
 import { hybridSearch } from './embeddings/search.js';
 import { getRecentNotes, generateSynthesisPrompt } from './synthesis/weekly-review.js';
+import { processNewClippings } from './classify/processor.js';
 
 export async function start() {
   const server = new McpServer({
@@ -318,6 +319,24 @@ export async function start() {
         if (notes.length === 0) return { content: [{ type: 'text', text: 'No recent notes to synthesize.' }] };
         const prompt = generateSynthesisPrompt(notes);
         return { content: [{ type: 'text', text: prompt }] };
+      } catch (err) {
+        return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    'kb_classify',
+    'Auto-classify new clippings and inbox notes using AI. Reads unprocessed notes, classifies them (type, tags, project, summary), and updates their frontmatter. Run this after syncing new content.',
+    {
+      dry_run: z.boolean().optional().default(false).describe('Preview classifications without writing changes'),
+    },
+    async ({ dry_run }) => {
+      try {
+        const vaultPath = process.env.OBSIDIAN_VAULT_PATH;
+        if (!vaultPath) return { content: [{ type: 'text', text: 'Error: OBSIDIAN_VAULT_PATH not configured' }], isError: true };
+        const result = await processNewClippings(vaultPath, { dryRun: dry_run });
+        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
       } catch (err) {
         return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
       }

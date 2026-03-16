@@ -21,4 +21,7 @@ node bin/kb.js capture-x 2>/dev/null
 # 3. Reindex vault (safety net)
 node bin/kb.js vault reindex 2>/dev/null
 
+# 4. Auto-classify new clippings/inbox notes
+node bin/kb.js classify 2>/dev/null
+
 echo "[cron-capture] Done at $(date)"
