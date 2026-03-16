@@ -13,6 +13,13 @@ const commands = {
   ingest:   () => import('../src/cli/ingest-cli.js').then(m => m.ingest(args[0])),
   search:   () => import('../src/cli/search-cli.js').then(m => m.search(args.join(' '))),
   status:   () => import('../src/cli/status.js').then(m => m.status()),
+  'capture-x': () => import('../src/capture/x-bookmarks.js').then(m => {
+    const bookmarksPath = args[0] || (process.env.HOME + '/knowledgebase/x_bookmarks.md');
+    const vaultPath = process.env.OBSIDIAN_VAULT_PATH;
+    if (!vaultPath) { console.error('OBSIDIAN_VAULT_PATH not set'); process.exit(1); }
+    const result = m.captureXBookmarks(bookmarksPath, vaultPath);
+    console.log(`X bookmarks: ${result.created} created, ${result.skipped} skipped (${result.total} total)`);
+  }),
   vault:    () => {
     const sub = args[0];
     if (sub === 'reindex') return import('../src/cli/vault-cli.js').then(m => m.vaultReindex());
@@ -33,6 +40,7 @@ Commands:
   search <query>     Search documents
   status             Show stats and server status
   vault reindex      Reindex Obsidian vault
+  capture-x [path]   Capture X/Twitter bookmarks to vault
 `);
   process.exit(command ? 1 : 0);
 }

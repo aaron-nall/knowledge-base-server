@@ -1,8 +1,14 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { searchDocuments, listDocuments, getDocument } from './db.js';
+import { writeFileSync, mkdirSync } from 'fs';
+import { join } from 'path';
+import { searchDocuments, listDocuments, getDocument, getStats, getDb } from './db.js';
 import { ingestText } from './ingest.js';
+import { indexVault } from './vault/indexer.js';
+import { captureYouTube } from './capture/youtube.js';
+import { captureWeb } from './capture/web.js';
+import { captureSession, captureFix } from './capture/terminal.js';
 
 export async function start() {
   const server = new McpServer({
@@ -76,6 +82,184 @@ export async function start() {
       try {
         const doc = ingestText(title, content, tags);
         return { content: [{ type: 'text', text: JSON.stringify(doc, null, 2) }] };
+      } catch (err) {
+        return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    'kb_write',
+    'Write a new note to the Obsidian vault. Use this to capture knowledge, ideas, lessons, or research that should persist across sessions. The note will be synced to all devices via Obsidian Sync.',
+    {
+      title: z.string().describe('Note title'),
+      content: z.string().describe('Markdown content (body text, no frontmatter needed)'),
+      type: z.enum(['research', 'idea', 'workflow', 'lesson', 'fix', 'decision', 'session', 'capture'])
+        .optional().default('capture').describe('Note type — determines vault folder destination'),
+      tags: z.string().optional().describe('Comma-separated tags'),
+      project: z.string().optional().describe('Project name (e.g. kb-system, media-ai, example-sensor)'),
+    },
+    async ({ title, content, type, tags, project }) => {
+      try {
+        const vaultPath = process.env.OBSIDIAN_VAULT_PATH;
+        if (!vaultPath) return { content: [{ type: 'text', text: 'Error: OBSIDIAN_VAULT_PATH not configured' }], isError: true };
+
+        const folderMap = {
+          capture: 'inbox',
+          research: 'research',
+          idea: 'ideas',
+          workflow: 'workflows',
+          lesson: 'agents/lessons',
+          fix: 'builds/fixes',
+          decision: 'decisions',
+          session: 'builds/sessions',
+        };
+        const folder = folderMap[type] || 'inbox';
+        const destDir = join(vaultPath, folder);
+        mkdirSync(destDir, { recursive: true });
+
+        const date = new Date().toISOString().split('T')[0];
+        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+        const filename = `${date}-${slug}.md`;
+        const filePath = join(destDir, filename);
+
+        const tagList = tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+        const fm = [
+          '---',
+          `title: "${title}"`,
+          `type: ${type}`,
+          `created: "${date}"`,
+          `updated: "${date}"`,
+          `tags: [${tagList.join(', ')}]`,
+        ];
+        if (project) fm.push(`project: ${project}`);
+        fm.push('status: active');
+        fm.push('---');
+
+        writeFileSync(filePath, fm.join('\n') + '\n\n' + content);
+
+        // Index immediately so the note is searchable right away
+        try { indexVault(vaultPath); } catch { /* non-fatal */ }
+
+        return { content: [{ type: 'text', text: `Note saved to ${folder}/${filename}` }] };
+      } catch (err) {
+        return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    'kb_vault_status',
+    'Show vault indexing status — how many notes are indexed, by type and project.',
+    {},
+    async () => {
+      try {
+        const stats = getStats();
+        const db = getDb();
+        const byType = db.prepare(
+          'SELECT note_type, COUNT(*) as count FROM vault_files GROUP BY note_type ORDER BY count DESC'
+        ).all();
+        const byProject = db.prepare(
+          'SELECT project, COUNT(*) as count FROM vault_files WHERE project IS NOT NULL GROUP BY project ORDER BY count DESC'
+        ).all();
+        return { content: [{ type: 'text', text: JSON.stringify({ ...stats, byType, byProject }, null, 2) }] };
+      } catch (err) {
+        return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    'kb_capture_youtube',
+    'Capture a YouTube video transcript into the knowledge base. Creates a structured note with metadata.',
+    {
+      title: z.string().describe('Video title'),
+      url: z.string().describe('YouTube URL'),
+      transcript: z.string().describe('Video transcript text'),
+      channel: z.string().optional().describe('Channel name'),
+      tags: z.string().optional().describe('Comma-separated tags'),
+    },
+    async ({ title, url, transcript, channel, tags }) => {
+      try {
+        const vaultPath = process.env.OBSIDIAN_VAULT_PATH;
+        if (!vaultPath) return { content: [{ type: 'text', text: 'Error: OBSIDIAN_VAULT_PATH not configured' }], isError: true };
+        const result = captureYouTube({ title, url, transcript, channel, tags }, vaultPath);
+        try { indexVault(vaultPath); } catch { /* non-fatal */ }
+        return { content: [{ type: 'text', text: JSON.stringify(result) }] };
+      } catch (err) {
+        return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    'kb_capture_web',
+    'Capture a web article or URL into the knowledge base. Use this whenever you find useful information during research.',
+    {
+      title: z.string().describe('Article/page title'),
+      url: z.string().describe('Source URL'),
+      content: z.string().describe('Article content or summary in markdown'),
+      tags: z.string().optional().describe('Comma-separated tags'),
+      project: z.string().optional().describe('Related project'),
+    },
+    async ({ title, url, content, tags, project }) => {
+      try {
+        const vaultPath = process.env.OBSIDIAN_VAULT_PATH;
+        if (!vaultPath) return { content: [{ type: 'text', text: 'Error: OBSIDIAN_VAULT_PATH not configured' }], isError: true };
+        const result = captureWeb({ title, url, content, tags, project }, vaultPath);
+        try { indexVault(vaultPath); } catch { /* non-fatal */ }
+        return { content: [{ type: 'text', text: JSON.stringify(result) }] };
+      } catch (err) {
+        return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    'kb_capture_session',
+    'Record a terminal/coding session summary — what you tried, what worked, what failed, and lessons learned. IMPORTANT: Call this at the end of every significant debugging or implementation session.',
+    {
+      goal: z.string().describe('What was the session trying to accomplish'),
+      commands_failed: z.string().optional().describe('Commands that failed (markdown list)'),
+      commands_worked: z.string().optional().describe('Commands that worked (markdown list)'),
+      root_causes: z.string().optional().describe('Root cause analysis'),
+      fixes: z.string().optional().describe('Fixes applied'),
+      lessons: z.string().optional().describe('Key takeaways and lessons learned'),
+      project: z.string().optional().describe('Project name'),
+      machine: z.string().optional().describe('Machine/environment identifier'),
+    },
+    async ({ goal, commands_failed, commands_worked, root_causes, fixes, lessons, project, machine }) => {
+      try {
+        const vaultPath = process.env.OBSIDIAN_VAULT_PATH;
+        if (!vaultPath) return { content: [{ type: 'text', text: 'Error: OBSIDIAN_VAULT_PATH not configured' }], isError: true };
+        const result = captureSession({ goal, commands_failed, commands_worked, root_causes, fixes, lessons, project, machine }, vaultPath);
+        try { indexVault(vaultPath); } catch { /* non-fatal */ }
+        return { content: [{ type: 'text', text: JSON.stringify(result) }] };
+      } catch (err) {
+        return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    'kb_capture_fix',
+    'Record a bug fix with symptom, cause, and resolution. Creates a searchable fix note for future reference.',
+    {
+      title: z.string().describe('Short title for the fix'),
+      symptom: z.string().optional().describe('What the symptom/error was'),
+      cause: z.string().optional().describe('Root cause'),
+      resolution: z.string().optional().describe('How it was fixed'),
+      commands: z.string().optional().describe('Key commands used'),
+      project: z.string().optional().describe('Project name'),
+      stack: z.string().optional().describe('Tech stack (e.g. node, docker, postgres)'),
+    },
+    async ({ title, symptom, cause, resolution, commands, project, stack }) => {
+      try {
+        const vaultPath = process.env.OBSIDIAN_VAULT_PATH;
+        if (!vaultPath) return { content: [{ type: 'text', text: 'Error: OBSIDIAN_VAULT_PATH not configured' }], isError: true };
+        const result = captureFix({ title, symptom, cause, resolution, commands, project, stack }, vaultPath);
+        try { indexVault(vaultPath); } catch { /* non-fatal */ }
+        return { content: [{ type: 'text', text: JSON.stringify(result) }] };
       } catch (err) {
         return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
       }
