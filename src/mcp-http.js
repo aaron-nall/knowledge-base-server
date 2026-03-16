@@ -50,6 +50,11 @@ export async function mcpHttpHandler(req, res) {
 
     const server = createMcpServer();
 
+    // Store session once the transport assigns a session ID (happens during handleRequest)
+    transport._webStandardTransport._onsessioninitialized = (sid) => {
+      sessions.set(sid, { server, transport });
+    };
+
     // Clean up when transport closes
     transport.onclose = () => {
       const sid = transport.sessionId;
@@ -58,14 +63,8 @@ export async function mcpHttpHandler(req, res) {
       }
     };
 
-    // Connect server to transport (starts the transport internally)
+    // Connect server to transport
     await server.connect(transport);
-
-    // Store after connect so sessionId is populated
-    const sid = transport.sessionId;
-    if (sid) {
-      sessions.set(sid, { server, transport });
-    }
   } else {
     // Unknown session ID
     res.status(404).json({
