@@ -117,11 +117,16 @@
           throw new Error(data.message || 'Invalid email or password');
         }
 
-        // After successful sign-in, redirect back to the OAuth flow
-        // The redirect_uri should be preserved in the URL params
+        // After successful sign-in, redirect back to the OAuth authorize endpoint
+        // better-auth passes the OAuth params as query params on /sign-in
         const params = new URLSearchParams(window.location.search);
-        const redirectTo = params.get('redirect') || params.get('callbackURL') || '/';
-        window.location.href = redirectTo;
+        if (params.get('response_type')) {
+          // OAuth flow: redirect back to authorize endpoint with all params
+          window.location.href = '/api/auth/mcp/authorize?' + params.toString();
+        } else {
+          const redirectTo = params.get('redirect') || params.get('callbackURL') || '/';
+          window.location.href = redirectTo;
+        }
       } catch (err) {
         errorEl.textContent = err.message;
         errorEl.hidden = false;
