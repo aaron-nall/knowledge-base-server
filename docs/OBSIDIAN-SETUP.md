@@ -68,40 +68,58 @@ These are essential for the knowledge base workflow:
 - Content lands in your inbox folder, gets synced to server, auto-classified by KB
 - Why: This is your primary capture mechanism for web content
 
+### Automation Plugins (API Access)
+
+These plugins expose your vault to external tools and scripts. They're what enable the KB server, agents, and automation workflows to interact with Obsidian programmatically.
+
+**5. Local REST API**
+- Exposes your Obsidian vault as a REST API on localhost
+- Endpoints for reading, creating, updating, and searching notes
+- Enables external scripts and services to interact with your vault
+- Secured with an API key (configured in plugin settings)
+- Why: This is how automation tools and agents can read/write to your vault when Obsidian is running on your desktop. Enables workflows like: agent finds something -> writes to vault via API -> you see it instantly
+
+**6. Advanced URI**
+- Deep linking to specific notes, headings, and blocks
+- Create notes from URI parameters (title, content, frontmatter)
+- Open specific views, run commands, and trigger actions via URI
+- Works across platforms (desktop and mobile)
+- Why: Enables automation shortcuts — bookmark a URI that creates a new research note with pre-filled template, or link directly to a specific section from external tools
+
 ### Recommended Plugins
 
 These enhance the workflow significantly:
 
-**5. Natural Language Dates**
+**7. Natural Language Dates**
 - Type `@today` or `@next friday` in frontmatter and it converts to proper dates
 - Works with Templater for auto-dating new notes
 - Why: Consistent date formatting across all notes
 
-**6. Tag Wrangler**
+**8. Tag Wrangler**
 - Rename tags across the entire vault in one operation
 - Merge duplicate tags (e.g., merge #bugfix and #bug-fix)
 - Bulk tag operations from the tag pane
 - Why: Keeps your tag taxonomy clean, which improves KB search quality
 
-**7. Periodic Notes**
+**9. Periodic Notes**
 - Auto-create daily and weekly notes from templates
 - Daily notes are great for quick captures throughout the day
 - Weekly notes are perfect for synthesis and review
 - Why: These get indexed by KB and agents can reference "what happened Monday"
 
-**8. QuickAdd**
+**10. QuickAdd**
 - Configurable quick-capture shortcuts
 - One-tap note creation with pre-filled templates
 - Multi-choice menus for different capture types
 - Why: Reduces friction for capturing on mobile — tap, type, done
 
-**9. Linter**
+**11. Linter**
 - Auto-format notes on save
 - Enforce consistent frontmatter field ordering
 - Clean up trailing whitespace and blank lines
 - Why: Consistent formatting helps the KB parser and classifier
 
-**10. Kanban**
+**12. Kanban**
 - Turn any note into a Kanban board
 - Visual project tracking inside your vault
 - Boards sync like any other note
@@ -109,12 +127,12 @@ These enhance the workflow significantly:
 
 ### Optional Plugins
 
-**11. Git** (desktop only)
+**13. Git** (desktop only)
 - Version control your vault as a secondary backup
 - See note change history
 - Not needed if using Obsidian Sync, but adds safety
 
-**12. Calendar**
+**14. Calendar**
 - Visual calendar view linked to daily notes
 - Quick navigation to any day's captures
 - Why: Helpful for reviewing past work
