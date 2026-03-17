@@ -20,12 +20,11 @@ export function createApiKeyMiddleware() {
       return res.status(401).json({ error: 'Missing API key. Provide X-API-Key header or Authorization: Bearer <key>' });
     }
 
-    // Match against configured keys
-    const keyMap = {
-      [process.env.KB_API_KEY_CLAUDE]: 'claude',
-      [process.env.KB_API_KEY_OPENAI]: 'openai',
-      [process.env.KB_API_KEY_GEMINI]: 'gemini',
-    };
+    // Match against configured keys (only add defined keys to prevent undefined match)
+    const keyMap = {};
+    if (process.env.KB_API_KEY_CLAUDE) keyMap[process.env.KB_API_KEY_CLAUDE] = 'claude';
+    if (process.env.KB_API_KEY_OPENAI) keyMap[process.env.KB_API_KEY_OPENAI] = 'openai';
+    if (process.env.KB_API_KEY_GEMINI) keyMap[process.env.KB_API_KEY_GEMINI] = 'gemini';
 
     const service = keyMap[key];
     if (!service) {

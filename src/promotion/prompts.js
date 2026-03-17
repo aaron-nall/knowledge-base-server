@@ -8,7 +8,7 @@ Content:
 Return this exact JSON structure:
 {
   "classifications": ["research"|"idea"|"workflow"|"lesson"|"market_signal"|"tutorial"|"architecture"|"decision_candidate"],
-  "projects": ["project names this is relevant to, from: example-sensor, example-security, kb-system, media-ai, example-project, general"],
+  "projects": ["project names this is relevant to, e.g.: my-app, backend, infrastructure, frontend, devops, general"],
   "key_insight": "one sentence summary of the most important takeaway",
   "business_angle": "any business opportunity or product idea, or null",
   "workflow_improvement": "any workflow optimization suggested, or null",

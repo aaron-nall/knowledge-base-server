@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // bin/kb.js — CLI entry point
-// Commands: start, stop, mcp, register, ingest <path>, search <query>, status
+// Commands: start, stop, mcp, register, ingest <path>, search <query>, status, setup
+
+import 'dotenv/config';
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
@@ -44,6 +46,7 @@ const commands = {
       if (dryRun) console.log('(dry run — no changes written)');
     });
   },
+  setup:    () => import('../src/cli/setup.js').then(m => m.setup(args)),
   'safety-check': () => {
     const action = args.join(' ');
     if (!action) { console.error('Usage: kb safety-check <action description>'); process.exit(1); }
@@ -76,6 +79,7 @@ Commands:
   classify           Auto-classify new clippings/inbox notes (--dry-run to preview)
   summarize          Add AI summaries to docs without them (--dry-run, --limit=N)
   capture-x [path]   Capture X/Twitter bookmarks to vault
+  setup              Interactive setup wizard (--auto for agent mode)
 `);
   process.exit(command ? 1 : 0);
 }

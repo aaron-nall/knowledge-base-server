@@ -7,12 +7,14 @@ import { readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { join, relative, extname } from 'path';
 
 const PROJECT_ROOT = process.argv[2] || process.cwd();
-const IGNORE_DIRS = new Set(['node_modules', '.git', 'data', 'coverage', '.claude', 'dist', 'build']);
+const IGNORE_DIRS = new Set(['node_modules', '.git', 'data', 'coverage', '.claude', 'dist', 'build', 'config', '__pycache__', 'venv', '.venv']);
 const CODE_EXTS = new Set(['.js', '.mjs', '.ts', '.py', '.sh']);
 
 function walk(dir) {
   const results = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+  let entries;
+  try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return results; }
+  for (const entry of entries) {
     if (IGNORE_DIRS.has(entry.name)) continue;
     if (entry.name.startsWith('.')) continue;
     const full = join(dir, entry.name);

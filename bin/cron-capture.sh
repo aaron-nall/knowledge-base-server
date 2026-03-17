@@ -1,8 +1,10 @@
 #!/bin/bash
 # Daily automated captures
-export PATH="__HOME__/.nvm/versions/node/v22.22.1/bin:/usr/local/bin:/usr/bin:$PATH"
-export OBSIDIAN_VAULT_PATH="${OBSIDIAN_VAULT_PATH:-__HOME__/obsidian-vault}"
-KB_DIR="__HOME__/knowledge-base-server"
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+export PATH="$HOME/.nvm/versions/node/$(node -v 2>/dev/null || echo v22.22.1)/bin:/usr/local/bin:/usr/bin:$PATH"
+export OBSIDIAN_VAULT_PATH="${OBSIDIAN_VAULT_PATH:-$HOME/obsidian-vault}"
+KB_DIR="${KB_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 
 # Load .env
 if [ -f "$KB_DIR/.env" ]; then

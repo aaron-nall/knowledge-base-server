@@ -3,12 +3,12 @@
   "info": {
     "title": "KB Brain API",
     "version": "1.0.0",
-    "description": "Knowledge Base Brain API for Knowledge Base. Use this API to search, read, and ingest documents from the personal knowledge base. When you need to find information about projects, architecture, configurations, debugging sessions, or any accumulated knowledge, use the search and context endpoints. Use ingest and capture endpoints to record new knowledge, bug fixes, or research."
+    "description": "Knowledge Base Brain API. Use this API to search, read, and ingest documents from the personal knowledge base. When you need to find information about projects, architecture, configurations, debugging sessions, or any accumulated knowledge, use the search and context endpoints. Use ingest and capture endpoints to record new knowledge, bug fixes, or research."
   },
   "servers": [
     {
-      "url": "https://brain.yourdomain.com",
-      "description": "Production KB Brain API"
+      "url": "http://localhost:3838",
+      "description": "Replace with your domain for remote access"
     }
   ],
   "security": [
@@ -239,7 +239,7 @@
       "get": {
         "operationId": "getContext",
         "summary": "Token-efficient knowledge briefing",
-        "description": "Returns a compact, synthesized briefing on a topic optimized for LLM consumption. Instead of raw documents, this returns a narrative summary with source citations. Use this when you need to understand a topic quickly without reading full documents. Ideal for getting up to speed on a project or technology before answering questions.",
+        "description": "Returns a synthesized briefing on a topic for LLM consumption. Returns a narrative summary with source citations instead of raw documents. Use to quickly understand a topic without reading full documents.",
         "parameters": [
           {
             "name": "q",

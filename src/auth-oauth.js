@@ -11,7 +11,7 @@ const AUTH_DB_PATH = join(KB_DIR, 'auth.db');
 export const auth = betterAuth({
   database: new Database(AUTH_DB_PATH),
   secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL || 'https://brain.yourdomain.com',
+  baseURL: process.env.BETTER_AUTH_URL || `http://localhost:${process.env.KB_PORT || 3838}`,
   basePath: '/api/auth',
   emailAndPassword: {
     enabled: true,

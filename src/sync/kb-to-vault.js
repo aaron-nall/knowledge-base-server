@@ -10,7 +10,9 @@ import { indexVault } from '../vault/indexer.js';
 import { mkdirSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 
-const VAULT_PATH = '__HOME__/obsidian-vault';
+import { homedir } from 'os';
+
+const VAULT_PATH = process.env.OBSIDIAN_VAULT_PATH || join(homedir(), 'obsidian-vault');
 
 // ── Folder routing ──────────────────────────────────────────────────
 

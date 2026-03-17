@@ -5,7 +5,10 @@
 import 'dotenv/config';
 import { getRecentNotes, generateSynthesisPrompt, writeSynthesisNote } from '../src/synthesis/weekly-review.js';
 
-const vaultPath = process.env.OBSIDIAN_VAULT_PATH || '__HOME__/obsidian-vault';
+import { homedir } from 'os';
+import { join } from 'path';
+
+const vaultPath = process.env.OBSIDIAN_VAULT_PATH || join(homedir(), 'obsidian-vault');
 const notes = getRecentNotes(vaultPath, 7);
 
 if (notes.length === 0) {

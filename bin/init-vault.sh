@@ -1,5 +1,5 @@
 #!/bin/bash
-VAULT="${OBSIDIAN_VAULT_PATH:-__HOME__/obsidian-vault}"
+VAULT="${OBSIDIAN_VAULT_PATH:-$HOME/obsidian-vault}"
 
 dirs=(
   "inbox"
@@ -7,11 +7,7 @@ dirs=(
   "sources/youtube"
   "sources/x-bookmarks"
   "sources/email"
-  "projects/example-sensor"
-  "projects/example-security"
-  "projects/media-ai"
-  "projects/kb-system"
-  "projects/example-project"
+  "projects"
   "People"
   "companies"
   "research"

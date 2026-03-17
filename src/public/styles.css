@@ -61,6 +61,10 @@ body {
   height: 100vh;
 }
 
+.app-layout[hidden] {
+  display: none;
+}
+
 /* Sidebar */
 .sidebar {
   width: 220px;
@@ -359,6 +363,10 @@ select {
   align-items: center;
   justify-content: center;
   z-index: 100;
+}
+
+.modal[hidden] {
+  display: none;
 }
 
 .modal-content {

@@ -9,7 +9,7 @@ Return ONLY valid JSON (no markdown fencing, no explanation) with these fields:
 {
   "type": one of: "research", "idea", "workflow", "lesson", "fix", "decision", "source", "person", "company", "project",
   "tags": array of 3-8 specific, lowercase tags (e.g. ["ai-agents", "obsidian", "automation", "knowledge-management"]),
-  "project": project name if relevant (e.g. "kb-system", "example-project", "media-ai") or null,
+  "project": project name if relevant (e.g. "my-app", "backend", "frontend") or null,
   "summary": 1-2 sentence summary optimized for AI retrieval (max 200 chars),
   "confidence": "high", "medium", or "low",
   "key_topics": array of 2-4 main topics/concepts covered

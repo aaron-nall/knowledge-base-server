@@ -191,14 +191,14 @@ router.get('/documents/:id', (req, res) => {
 
 // POST /ingest — ingest text document
 router.post('/ingest', (req, res) => {
-  const { title, content, tags } = req.body || {};
+  const { title, content, tags, doc_type, source } = req.body || {};
 
   if (!title || !content) {
     return res.status(400).json({ error: 'Missing required fields: title, content' });
   }
 
   try {
-    const doc = ingestText(title, content, tags);
+    const doc = ingestText(title, content, { tags, doc_type, source });
     // Fetch from DB to get the created_at timestamp set by SQLite default
     const stored = getDocument(doc.id);
     res.status(201).json({

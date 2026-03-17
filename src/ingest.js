@@ -127,13 +127,13 @@ export async function ingestDirectory(dirPath) {
   return { ingested, skipped, errors };
 }
 
-export function ingestText(title, content, tags) {
+export function ingestText(title, content, { tags, doc_type, source } = {}) {
   return insertDocument({
     title,
     content,
-    source: 'manual',
-    doc_type: 'text',
-    tags: tags || '',
+    source: source || 'manual',
+    doc_type: doc_type || 'text',
+    tags: Array.isArray(tags) ? tags.join(', ') : (tags || ''),
     file_size: Buffer.byteLength(content),
   });
 }

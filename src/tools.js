@@ -103,7 +103,7 @@ export function getToolDefinitions() {
         type: z.enum(['research', 'idea', 'workflow', 'lesson', 'fix', 'decision', 'session', 'capture'])
           .optional().default('capture').describe('Note type — determines vault folder destination'),
         tags: z.string().optional().describe('Comma-separated tags'),
-        project: z.string().optional().describe('Project name (e.g. kb-system, media-ai, example-sensor)'),
+        project: z.string().optional().describe('Project name (e.g. my-app, backend, frontend)'),
       },
       handler: async ({ title, content, type, tags, project }) => {
         try {
